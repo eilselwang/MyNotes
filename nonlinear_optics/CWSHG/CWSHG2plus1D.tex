@@ -1,0 +1,172 @@
+\documentclass[a4paper,10pt]{ctexart}
+
+\usepackage[margin=2.54cm]{geometry}
+\usepackage{newtxmath}
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{svg}
+\usepackage{fancyhdr}
+\usepackage[backend=biber]{biblatex}
+
+% Western text/numerals use Times New Roman and mathematics uses a
+% Times-compatible font. Chinese text and headings follow ctexart defaults.
+\setmainfont{Times New Roman}
+\addbibresource{ref.bib}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{Continuous Wave Second Harmonics Generation}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\newcommand{\dd}{\mathop{}\!\mathrm{d}}
+
+\title{Continuous Wave Second Harmonics Generation}
+\author{Wei}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Theory}
+
+\subsection{Coupled wave equations}
+Considering diffraction, walk off and nonlinearity, the coupled wave equations are:
+\begin{equation}
+  \begin{aligned}
+    \frac{\partial A_{\mathrm{SH}}}{\partial z}
+             & =\frac{\mathrm{i}}{2k_{\mathrm{SH}}}\nabla_\perp^2A_{\mathrm{SH}}
+    +\tan\rho\frac{\partial A_{\mathrm{SH}}}{\partial y}
+    +\frac{\mathrm{i}\omega_{\mathrm{SH}}}{2n_{\mathrm{SH}}c}
+    d_{\mathrm{eff}}A_{\mathrm{F}}^2\exp(-\mathrm{i}\Delta kz),                  \\
+    \frac{\partial A_{\mathrm{F}}}{\partial z}
+             & =\frac{\mathrm{i}}{2k_{\mathrm{F}}}\nabla_\perp^2A_{\mathrm{F}}
+    +\frac{\mathrm{i}\omega_{\mathrm{F}}}{n_{\mathrm{F}}c}
+    d_{\mathrm{eff}}A_{\mathrm{SH}}A_{\mathrm{F}}^*
+    \exp(\mathrm{i}\Delta kz),                                                   \\
+    \Delta k & =k_{\mathrm{SH}}-2k_{\mathrm{F}}.
+  \end{aligned}
+  \label{eq:CWE}
+\end{equation}
+For LBO in the XY plane, $d_{\mathrm{eff}}=d_{32}\cos\phi$, where
+$d_{32}=-0.98\,\mathrm{pm/V}$.
+
+The input Gaussian beam is:
+\begin{equation}
+  A(x,y,z)=A_0\frac{\omega_0}{\omega(z)}
+  \exp\left[-\frac{x^2+y^2}{\omega^2(z)}\right]
+  \exp\left\{\mathrm{i}k\left[z+\frac{x^2+y^2}{2R(z)}\right]
+  -\mathrm{i}\arctan\left(\frac{z}{z_R}\right)\right\}.
+  \label{eq:gaussian-beam}
+\end{equation}
+where $\omega_0$ and $\omega(z)$ are beam radii at $1/e^2$ intensity and $z$ is the
+distance from the beam waist. If the average power is $P$ and the refractive
+index of the medium is $n$, the other parameters are:
+\begin{equation}
+  \begin{aligned}
+    k         & =\frac{2\pi}{\lambda},                           \\
+    \omega(z) & =\omega_0\sqrt{1+\left(\frac{z}{z_R}\right)^2},  \\
+    R(z)      & =z+\frac{z_R^2}{z},                              \\
+    z_R       & =\frac{\pi\omega_0^2}{\lambda},                  \\
+    A_0       & =\sqrt{\frac{4P}{\pi\omega_0^2nc\varepsilon_0}}.
+  \end{aligned}
+\end{equation}
+
+\begin{figure}[t]
+  \centering
+  \IfFileExists{../fig/beam.svg}{%
+    \includesvg[width=0.75\linewidth]{../fig/beam}%
+  }{%
+    \fbox{\parbox[c][3cm][c]{0.7\linewidth}{\centering
+        Missing figure: \texttt{../fig/beam.svg}}}%
+  }
+  \caption{Gaussian beam is focused to the nonlinear crystal.}
+  \label{fig:gaussian-beam}
+\end{figure}
+
+The definition of the D4$\sigma$ radius is:
+\begin{equation}
+  \omega_x=2\sqrt{\frac{\iint x^2I(x,y)\dd x\dd y}
+    {\iint I(x,y)\dd x\dd y}}.
+\end{equation}
+
+\subsection{Numerical algorithm}
+Equation~\eqref{eq:CWE} is solved by using the RK4IP method
+\cite{balac_embedded_2013}, but without adaptive step-size control.
+Equation~\eqref{eq:CWE} can be organized as follows:
+\begin{equation}
+  \begin{aligned}
+    \frac{\partial A_S}{\partial z}
+     & =\mathcal{D}_SA_S+\mathcal{N}_S(A_S,A_F), \\
+    \frac{\partial A_F}{\partial z}
+     & =\mathcal{D}_FA_S+\mathcal{N}_F(A_S,A_F).
+  \end{aligned}
+\end{equation}
+where $\mathcal{D}$ represents linear effects and $\mathcal{N}$ represents
+nonlinear coupling. Then transform $A_S$ and $A_F$ to the interaction picture:
+\begin{equation}
+  \begin{aligned}
+    A_S^{\mathrm{ip}} & =\exp[-(z-z')\mathcal{D}_S]A_S, \\
+    A_F^{\mathrm{ip}} & =\exp[-(z-z')\mathcal{D}_F]A_F.
+  \end{aligned}
+\end{equation}
+The coupled equations in the interaction picture are:
+\begin{equation}
+  \begin{aligned}
+    \frac{\partial A_S^{\mathrm{ip}}}{\partial z}
+     & =\exp[-(z-z')\mathcal{D}_S]\mathcal{N}_S
+    \left(\exp[(z-z')\mathcal{D}_S]A_S^{\mathrm{ip}},
+    \exp[(z-z')\mathcal{D}_F]A_F^{\mathrm{ip}}\right), \\
+    \frac{\partial A_F^{\mathrm{ip}}}{\partial z}
+     & =\exp[-(z-z')\mathcal{D}_F]\mathcal{N}_F
+    \left(\exp[(z-z')\mathcal{D}_S]A_S^{\mathrm{ip}},
+    \exp[(z-z')\mathcal{D}_F]A_F^{\mathrm{ip}}\right).
+  \end{aligned}
+  \label{eq:IP-CWE}
+\end{equation}
+By choosing $z'=z+h/2$, Equation~\eqref{eq:IP-CWE} can be solved by the RK4
+method:
+\begin{align}
+  \alpha_{1S} & =\exp\left(\frac{h}{2}\mathcal{D}_S\right)
+  \mathcal{N}_S(A_S,A_F),                                                     \\
+  \alpha_{1F} & =\exp\left(\frac{h}{2}\mathcal{D}_F\right)
+  \mathcal{N}_F(A_S,A_F),                                                     \\
+  \alpha_{2S} & =\mathcal{N}_S\left(A_S^{\mathrm{ip}}+\frac{h}{2}\alpha_{1S},
+  A_F^{\mathrm{ip}}+\frac{h}{2}\alpha_{1F}\right),                            \\
+  \alpha_{2F} & =\mathcal{N}_F\left(A_S^{\mathrm{ip}}+\frac{h}{2}\alpha_{1S},
+  A_F^{\mathrm{ip}}+\frac{h}{2}\alpha_{1F}\right),                            \\
+  \alpha_{3S} & =\mathcal{N}_S\left(A_S^{\mathrm{ip}}+\frac{h}{2}\alpha_{2S},
+  A_F^{\mathrm{ip}}+\frac{h}{2}\alpha_{2F}\right),                            \\
+  \alpha_{3F} & =\mathcal{N}_F\left(A_S^{\mathrm{ip}}+\frac{h}{2}\alpha_{2S},
+  A_F^{\mathrm{ip}}+\frac{h}{2}\alpha_{2F}\right),                            \\
+  \alpha_{4S} & =\mathcal{N}_S\left(
+  \exp\left(\frac{h}{2}\mathcal{D}_S\right)
+  (A_S^{\mathrm{ip}}+h\alpha_{3S}),
+  \exp\left(\frac{h}{2}\mathcal{D}_F\right)
+  (A_F^{\mathrm{ip}}+h\alpha_{3F})\right),                                    \\
+  \alpha_{4F} & =\mathcal{N}_F\left(
+  \exp\left(\frac{h}{2}\mathcal{D}_S\right)
+  (A_S^{\mathrm{ip}}+h\alpha_{3S}),
+  \exp\left(\frac{h}{2}\mathcal{D}_F\right)
+  (A_F^{\mathrm{ip}}+h\alpha_{3F})\right),                                    \\
+  A_S(z+h)    & =\exp\left(\frac{h}{2}\mathcal{D}_S\right)
+  \left[A_S^{\mathrm{ip}}+\frac{h}{6}
+    (\alpha_{1S}+2\alpha_{2S}+2\alpha_{3S})\right]
+  +\frac{h}{6}\alpha_{4S},                                                    \\
+  A_F(z+h)    & =\exp\left(\frac{h}{2}\mathcal{D}_F\right)
+  \left[A_F^{\mathrm{ip}}+\frac{h}{6}
+    (\alpha_{1F}+2\alpha_{2F}+2\alpha_{3F})\right]
+  +\frac{h}{6}\alpha_{4F}.
+\end{align}
+One should use the form of Equation~\eqref{eq:IP-CWE} and finally apply
+$z'=z+h/2$ when deriving the above relations, and remember to include the
+phase-matching term when doing the actual numerical calculation.
+
+\printbibliography
+
+\end{document}

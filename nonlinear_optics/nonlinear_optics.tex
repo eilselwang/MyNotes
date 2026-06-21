@@ -1,34 +1,379 @@
 \documentclass[a4paper,12pt]{ctexart}
-\usepackage[margin=2.54cm]{geometry}
-\usepackage{setspace}
-\onehalfspacing
 
+\usepackage[margin=2.54cm]{geometry}
+\usepackage{newtxmath}
 \usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{indentfirst}
+
+% Western text/numerals use Times New Roman and mathematics uses a
+% Times-compatible font. Chinese text and headings follow ctexart defaults.
 \setmainfont{Times New Roman}
 
-\usepackage{amsmath,amssymb}
-\usepackage{newtxtext,newtxmath}
-\usepackage{graphicx}
-\usepackage{diffcoeff}
-\usepackage{siunitx}
-\usepackage{bm}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\linespread{1.25}
+\numberwithin{equation}{section}
 
-\title{非线性光学笔记}
-\author{王伟}
-\date{\today}
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\dd}{\mathop{}\!\mathrm{d}}
+\newcommand{\FT}{\mathcal{F}}
 
 \begin{document}
-\maketitle
-\section{UPPE到倍频耦合波方程}
-\subsection{这是子标题}
-\subsubsection{这是子子标题}
-这是中文文本。This is English.
-\[
-  \diffp{\tilde{E}}{z} =
-  iK_z^\mathrm{UPPE}(\bm{k}_\perp,\omega)\tilde{E}+i\frac{\omega^2}{c^2 K_z^\mathrm{UPPE}(\bm{k}_\perp,\omega)}\frac{\tilde{P}}{2\varepsilon_0}
-\]
-这是第一行。
 
-这是第二行。
+\section{理论}
+
+\subsection{Maxwell方程到波动方程（Wave equation）}
+\begin{equation}
+  \begin{aligned}
+    \nabla\cdot\vect{D}  & = \rho,                                         \\
+    \nabla\cdot\vect{B}  & = 0,                                            \\
+    \nabla\times\vect{E} & = -\frac{\partial\vect{B}}{\partial t},         \\
+    \nabla\times\vect{H} & = \vect{J}+\frac{\partial\vect{D}}{\partial t}.
+  \end{aligned}
+  \label{eq:Maxwell}
+\end{equation}
+方程~\eqref{eq:Maxwell} 中所有的场振幅和相位依赖于空间
+$\vect{r}=(x,y)$、时间 $t$ 和传播方向 $z$。电位移矢量的表达式为：
+\begin{equation}
+  \hat{\vect{D}}(\vect{r},\omega,z)
+  =\varepsilon_0\varepsilon(\omega)\hat{\vect{E}}(\vect{r},\omega,z)
+  +\hat{\vect{P}}(\vect{r},\omega,z).
+  \label{eq:Displacement}
+\end{equation}
+对方程~\eqref{eq:Maxwell} 中的第三式取旋度，并代入
+方程~\eqref{eq:Displacement} 化简得：
+\begin{equation}
+  \nabla^2\vect{E}-\nabla(\nabla\cdot\vect{E})
+  -\frac{1}{c^2}\frac{\partial^2}{\partial t^2}
+  \int_{-\infty}^{t}\varepsilon(t-t')\vect{E}(\vect{r},t',z)\dd t'
+  =\mu_0\left(\frac{\partial\vect{J}}{\partial t}
+  +\frac{\partial^2\vect{P}}{\partial t^2}\right).
+  \label{eq:time-domain}
+\end{equation}
+方程~\eqref{eq:time-domain} 中 $\vect{E}$、$\vect{J}$、$\vect{P}$
+依赖于 $(\vect{r},t,z)$，变换到空间--频率域：
+\begin{equation}
+  \nabla^2\hat{\vect{E}}-\nabla(\nabla\cdot\hat{\vect{E}})
+  +\frac{\omega^2n^2(\omega)}{c^2}\hat{\vect{E}}
+  =\mu_0\left(-\mathrm{i}\omega\hat{\vect{J}}-\omega^2\hat{\vect{P}}\right).
+  \label{eq:frequency-domain}
+\end{equation}
+方程~\eqref{eq:frequency-domain} 中 $\hat{\vect{E}}$、$\hat{\vect{J}}$、
+$\hat{\vect{P}}$ 依赖于 $(\vect{r},\omega,z)$，介电常数
+$\varepsilon(\omega)=n^2(\omega)$，表示材料的线性折射率。
+
+\subsection{标量波动方程}
+假设电场强度垂直于传播方向线性偏振，偏振方向为 $\vect{e}_s$。那么，
+$\vect{E}=E\vect{e}_s$，$\vect{P}=P\vect{e}_s$，$\vect{J}=J\vect{e}_s$。
+方程~\eqref{eq:frequency-domain} 中的
+$\nabla(\nabla\cdot\hat{\vect{E}})$ 因此可以被忽略。方程可写成标量形式：
+\begin{equation}
+  \left(\partial_z^2+\nabla_\perp^2\right)\hat{E}(\vect{r},\omega,z)
+  +k^2(\omega)\hat{E}(\vect{r},\omega,z)
+  =-\mu_0\omega^2\hat{P}(\vect{r},\omega,z).
+  \label{eq:scalar-form}
+\end{equation}
+其中，$k(\omega)=n(\omega)\omega/c$。在需要加入电流面密度 $\hat{J}$ 时，
+可以将极化强度 $\hat{P}$ 替换为 $\hat{P}+\mathrm{i}\hat{J}/\omega$。
+
+\subsection{一些变换}
+
+\subsubsection{从实验室参考系变换到脉冲参考系}
+实验室参考系 $(z,t)$ 变换到脉冲参考系 $(\zeta,\tau)$：
+\begin{equation}
+  \begin{aligned}
+    \zeta & = z,       \\
+    \tau  & = t-z/v_g.
+  \end{aligned}
+\end{equation}
+对于某一依赖关系
+$\partial_z A(z,t)=\partial_\zeta A(\zeta,\tau)\,\partial_z\zeta
+  +\partial_\tau A(\zeta,\tau)\,\partial_z\tau$，因此：
+\begin{equation}
+  \begin{aligned}
+    \partial_z & = \partial_\zeta-\frac{1}{v_g}\partial_\tau, \\
+    \partial_t & = \partial_\tau.
+  \end{aligned}
+  \label{eq:frame}
+\end{equation}
+通常选脉冲的群速度作为 $v_g$。在频域中，
+$\partial_z=\partial_\zeta+\mathrm{i}\omega/v_g$。
+
+\subsubsection{傅里叶变换}
+
+\paragraph{时间傅里叶变换}
+时间 $t$ 和频率 $\omega$ 的傅里叶变换为：
+\begin{equation}
+  \hat{A}(\omega)=\int_{-\infty}^{+\infty}A(t)\exp(\mathrm{i}\omega t)\dd t
+  \approx\frac{T}{N}\sum_{n=0}^{N-1}A(t_n)\exp(\mathrm{i}\omega t_n).
+\end{equation}
+逆变换为：
+\begin{equation}
+  A(t)=\frac{1}{2\pi}\int_{-\infty}^{+\infty}\hat{A}(\omega)
+  \exp(-\mathrm{i}\omega t)\dd\omega
+  \approx\frac{1}{T}\sum_{n=0}^{N-1}\hat{A}(\omega_n)
+  \exp(-\mathrm{i}\omega_n t).
+\end{equation}
+其中，$T$ 为时间窗口，$N$ 为采样点数。
+
+对于连续时间傅里叶变换的卷积定理：
+\begin{equation}
+  \FT[f(t)*g(t)]=\FT[f(t)]\FT[g(t)].
+\end{equation}
+其中，$\FT$ 表示连续时间傅里叶变换。对于归一化的 DFT（numpy 或者 matlab）：
+\begin{equation}
+  \FT_D[f(t)*g(t)]=T\FT_D[f(t)]\FT_D[g(t)].
+\end{equation}
+对于非归一化的 DFT（FFTW 或者 cuFFT）：
+\begin{equation}
+  \FT_D[f(t)*g(t)]=\frac{T}{N}\FT_D[f(t)]\FT_D[g(t)].
+\end{equation}
+由于 DFT 默认时间零点从索引 0 开始，一个函数的时间零点要从索引 0 开始，
+另一个函数的时间零点在序列中心。
+
+\paragraph{空间二维傅里叶变换}
+空间 $(x,y)$ 和空频域 $(k_x,k_y)$ 的傅里叶变换为：
+\begin{equation}
+  \begin{aligned}
+    \hat{A}(k_x,k_y)
+     & =\iint_{-\infty}^{+\infty}A(x,y)
+    \exp[-\mathrm{i}(k_xx+k_yy)]\dd x\dd y \\
+     & \approx\frac{X}{M}\frac{Y}{N}
+    \sum_{m=0}^{M-1}\sum_{n=0}^{N-1}A(x_m,y_n)
+    \exp[-\mathrm{i}(k_xx_m+k_yy_n)].
+  \end{aligned}
+\end{equation}
+逆变换为：
+\begin{equation}
+  \begin{aligned}
+    A(x,y)
+     & =\frac{1}{(2\pi)^2}\iint_{-\infty}^{+\infty}\hat{A}(k_x,k_y)
+    \exp[\mathrm{i}(k_xx+k_yy)]\dd k_x\dd k_y                       \\
+     & \approx\frac{1}{XY}\sum_{m=0}^{M-1}\sum_{n=0}^{N-1}
+    \hat{A}(k_{x_m},k_{y_n})
+    \exp[\mathrm{i}(k_{x_m}x+k_{y_n}y)].
+  \end{aligned}
+\end{equation}
+其中，$X$ 和 $Y$ 为两个方向的窗口长度，$M$ 和 $N$ 为两个方向的采样点数。
+数值实现里注意 fft 和 ifft 的使用。
+
+\subsection{载波分辨的单向传输方程}
+
+\subsubsection{标量波动方程分解}
+\label{sec:factor-method}
+采用分解方程~\eqref{eq:scalar-form} 的方式推导 Forward Maxwell Equation（FME）
+\cite{Feit:88}，将传播算子分解为前向和后向：
+\begin{equation}
+  (\partial_z+\mathrm{i}k(\omega))(\partial_z-\mathrm{i}k(\omega))\hat{E}
+  =-\nabla_\perp^2\hat{E}-\mu_0\omega^2\hat{P}(\vect{r},\omega,z).
+  \label{eq:factor}
+\end{equation}
+若方程~\eqref{eq:factor} 不含右手边表示衍射和非线性极化的项，方程的解为
+前向传输的波与反向传输的波的叠加：
+\begin{equation}
+  \hat{E}(\omega,z)=\hat{A}_+(\omega)\exp[\mathrm{i}k(\omega)z]
+  +\hat{A}_-(\omega)\exp[-\mathrm{i}k(\omega)z].
+\end{equation}
+假设前向传输的分量远远强于后向传输的分量，
+$|\hat{A}_-|\ll|\hat{A}_+|$，那么近似
+$\partial_z+\mathrm{i}k(\omega)\approx2\mathrm{i}k(\omega)$ 成立，
+方程~\eqref{eq:factor} 近似为 FME：
+\begin{equation}
+  \frac{\partial\hat{E}}{\partial z}
+  =\mathrm{i}k(\omega)\hat{E}
+  +\frac{\mathrm{i}}{2k(\omega)}\nabla_\perp^2\hat{E}
+  +\frac{\mathrm{i}}{n(\omega)}\frac{\omega}{c}
+  \frac{\hat{P}}{2\varepsilon_0}.
+  \label{eq:FME}
+\end{equation}
+
+利用方程~\eqref{eq:frame} 将方程~\eqref{eq:FME} 变换到脉冲参考系，
+利用傅里叶变换，得到 FME 在空频--时频域 $(\vect{k}_\perp,\omega)$ 的表示：
+\begin{equation}
+  \frac{\partial\tilde{E}}{\partial\zeta}
+  =\mathrm{i}\left[k(\omega)-\frac{k_\perp^2}{2k(\omega)}
+    -\frac{\omega}{v_g}\right]\tilde{E}
+  +\frac{\mathrm{i}\omega}{cn(\omega)}\frac{\tilde{P}}{2\varepsilon_0}.
+  \label{eq:FME-local}
+\end{equation}
+
+\subsubsection{标准化形式}
+在空频--时频域，不仅仅是 FME，任何单向传输方程（Unidirectional Propagation
+Equations）都可以化为标准形式：
+\begin{equation}
+  \frac{\partial\tilde{E}}{\partial z}
+  =\mathrm{i}K_z(\vect{k}_\perp,\omega)\tilde{E}
+  +\mathrm{i}Q(\vect{k}_\perp,\omega)\frac{\tilde{P}}{2\varepsilon_0}.
+  \label{eq:canonical}
+\end{equation}
+在脉冲坐标下，$Q$ 的形式不变，$K_z$ 变换为 $K_z-\omega/v_g$：
+\begin{equation}
+  \frac{\partial\tilde{E}}{\partial\zeta}
+  =\mathrm{i}\left[K_z(\vect{k}_\perp,\omega)-\frac{\omega}{v_g}\right]\tilde{E}
+  +\mathrm{i}Q(\vect{k}_\perp,\omega)\frac{\tilde{P}}{2\varepsilon_0}.
+  \label{eq:canonical-local}
+\end{equation}
+例如，FME 的 $K_z$ 和 $Q$ 分别为：
+\begin{equation}
+  \begin{aligned}
+    K_z^{(\mathrm{FME})}(\vect{k}_\perp,\omega)
+     & =k(\omega)-\frac{k_\perp^2}{2k(\omega)}, \\
+    Q^{(\mathrm{FME})}(\vect{k}_\perp,\omega)
+     & =\frac{\omega}{cn(\omega)}.
+  \end{aligned}
+\end{equation}
+
+\subsubsection{Slowly Evolving Wave Approximation}
+将方程~\eqref{eq:frame} 直接代入方程~\eqref{eq:scalar-form} 并变换到时频域：
+\begin{equation}
+  \frac{\partial^2\hat{E}}{\partial\zeta^2}
+  +\frac{2\mathrm{i}\omega}{v_g}\frac{\partial\hat{E}}{\partial\zeta}
+  =-\nabla_\perp^2\hat{E}
+  -\left[k^2(\omega)-\frac{\omega^2}{v_g^2}\right]\hat{E}
+  -\frac{\omega^2}{c^2}\frac{\hat{P}}{\varepsilon_0}.
+  \label{eq:scalar-form-local}
+\end{equation}
+引入 Slowly Evolving Wave Approximation（SEWA），忽略
+方程~\eqref{eq:scalar-form-local} 左手边 $\hat{E}$ 关于 $\zeta$ 的二阶导，即认为
+\begin{equation}
+  \left|\frac{\partial^2\hat{E}}{\partial\zeta^2}\right|
+  \ll\left|\frac{2\omega}{v_g}\frac{\partial\hat{E}}{\partial\zeta}\right|,
+\end{equation}
+或者等效地：
+\begin{equation}
+  \left|\frac{\partial\hat{E}}{\partial\zeta}\right|
+  \ll\left|\frac{\omega}{v_g}\hat{E}\right|.
+  \label{eq:SEWA}
+\end{equation}
+方程~\eqref{eq:SEWA} 的物理意义是 $\hat{E}(\vect{r},\omega)$ 发生明显变化的
+长度尺寸远远大于 $v_g/\omega$。
+
+将 SEWA 应用于方程~\eqref{eq:scalar-form-local} 得到 Forward Wave Equation（FWE），
+实验室坐标下 FWE 的标准形式 $K_z^{(\mathrm{FWE})}(\vect{k}_\perp,\omega)$ 和
+$Q^{(\mathrm{FWE})}(\vect{k}_\perp,\omega)$ 为：
+\begin{equation}
+  \begin{aligned}
+    K_z^{(\mathrm{FWE})}(\vect{k}_\perp,\omega)
+     & =k(\omega)+\frac{v_g}{2\omega}
+    \left[\left(k(\omega)-\frac{\omega}{v_g}\right)^2-k_\perp^2\right], \\
+    Q^{(\mathrm{FWE})}(\vect{k}_\perp,\omega)
+     & =\frac{\omega v_g}{c^2}.
+  \end{aligned}
+  \label{eq:FWE}
+\end{equation}
+
+比较 FME 和 FWE 的线性和非线性算符，可以得到以下关系式：
+\begin{equation}
+  \begin{aligned}
+    K_z^{(\mathrm{FME})}-K_z^{(\mathrm{FWE})}
+     & =-\frac{\omega}{2v_g}\left(1-\frac{n(\omega)v_g}{c}\right)^2
+    -\frac{k_\perp^2}{2k(\omega)}
+    \left(1-\frac{n(\omega)v_g}{c}\right),                              \\
+    Q^{(\mathrm{FME})}-Q^{(\mathrm{FWE})}
+     & =\frac{\omega}{n(\omega)c}\left(1-\frac{n(\omega)v_g}{c}\right).
+  \end{aligned}
+  \label{eq:compare}
+\end{equation}
+
+\subsubsection{Unidirectional Pulse Propagation Equation}
+将方程~\eqref{eq:scalar-form} 变换到空频--时频域：
+\begin{equation}
+  \left[\partial_z^2+k^2(\omega)-k_\perp^2\right]\tilde{E}
+  =-\mu_0\omega^2\tilde{P}.
+\end{equation}
+引入 $K_z^{(\mathrm{UPPE})}=\sqrt{k^2(\omega)-k_\perp^2}$，上面方程变成：
+\begin{equation}
+  (\partial_z+\mathrm{i}K_z)(\partial_z-\mathrm{i}K_z)\tilde{E}
+  =-\mu_0\omega^2\tilde{P}.
+\end{equation}
+通过第~\ref{sec:factor-method} 节中类似的分解方法，可以得到
+Unidirectional Pulse Propagation Equation（UPPE）：
+\begin{equation}
+  \frac{\partial\tilde{E}}{\partial z}
+  =\mathrm{i}K_z^{(\mathrm{UPPE})}(\vect{k}_\perp,\omega)\tilde{E}
+  +\frac{\mathrm{i}\omega^2}
+  {c^2K_z^{(\mathrm{UPPE})}(\vect{k}_\perp,\omega)}
+  \frac{\tilde{P}}{2\varepsilon_0}.
+  \label{eq:UPPE}
+\end{equation}
+方程~\eqref{eq:UPPE} 取标准形式时，线性和非线性算符为：
+\begin{equation}
+  \begin{aligned}
+    K_z^{(\mathrm{UPPE})}(\vect{k}_\perp,\omega)
+     & =\sqrt{k^2(\omega)-k_\perp^2},                     \\
+    Q_z^{(\mathrm{UPPE})}(\vect{k}_\perp,\omega)
+     & =\frac{\omega^2}{c^2\sqrt{k^2(\omega)-k_\perp^2}}.
+  \end{aligned}
+  \label{eq:UPPE-canonical}
+\end{equation}
+当考虑傍轴近似时，$|k_\perp|\ll|k(\omega)|$，UPPE 可以近似为 FME。以 FME 为主。
+
+\subsection{基于包络的传输方程}
+电场强度被描述为脉冲包络 $\mathcal{E}$ 和一个载波频率 $\omega_0$ 的叠加：
+\begin{equation}
+  E(\vect{r}_\perp,t,z)=\mathcal{E}(\vect{r}_\perp,t,z)
+  \exp[\mathrm{i}(k_0z-\omega_0t)].
+\end{equation}
+在脉冲坐标下：
+\begin{equation}
+  E(\vect{r}_\perp,\tau,\zeta)=\mathcal{E}(\vect{r}_\perp,\tau,\zeta)
+  \exp\left\{\mathrm{i}\left(k_0-\frac{\omega_0}{v_g}\right)\zeta
+  -\mathrm{i}\omega_0\tau\right\}.
+\end{equation}
+
+在实验室坐标下：
+\begin{equation}
+  \begin{aligned}
+    \partial_zE
+     & =\exp[\mathrm{i}k_0z-\mathrm{i}\omega_0t](\partial_z+\mathrm{i}k_0)\mathcal{E},      \\
+    \partial_tE
+     & =\exp[\mathrm{i}k_0z-\mathrm{i}\omega_0t](\partial_t-\mathrm{i}\omega_0)\mathcal{E}.
+  \end{aligned}
+  \label{eq:lab-frame}
+\end{equation}
+在脉冲坐标下：
+\begin{equation}
+  \begin{aligned}
+    \partial_\zeta E
+     & =\exp\left\{\mathrm{i}\left(k_0-\frac{\omega_0}{v_g}\right)\zeta
+    -\mathrm{i}\omega_0\tau\right\}
+    \left[\partial_\zeta+\mathrm{i}\left(k_0-\frac{\omega_0}{v_g}\right)\right]\mathcal{E}, \\
+    \partial_\tau E
+     & =\exp\left\{\mathrm{i}\left(k_0-\frac{\omega_0}{v_g}\right)\zeta
+    -\mathrm{i}\omega_0\tau\right\}
+    (\partial_\tau-\mathrm{i}\omega_0)\mathcal{E}.
+  \end{aligned}
+  \label{eq:pulse-frame}
+\end{equation}
+包络传输方程也有如下的标准形式：
+\begin{equation}
+  \frac{\partial\widetilde{\mathcal{E}}}{\partial\zeta}
+  =\mathrm{i}\mathcal{K}(\vect{k}_\perp,\Omega)\widetilde{\mathcal{E}}
+  +\mathrm{i}\mathcal{Q}(\vect{k}_\perp,\Omega)
+  \frac{\widetilde{\mathcal{P}}}{2\varepsilon_0}.
+  \label{eq:envelope-canonical}
+\end{equation}
+其中，$\Omega=\omega-\omega_0$。
+
+\subsubsection{Forward Envelope Equation}
+将方程~\eqref{eq:frame} 和方程~\eqref{eq:pulse-frame} 代入
+方程~\eqref{eq:canonical} 可得：
+\begin{equation}
+  \begin{aligned}
+    \mathcal{K}(\vect{k}_\perp,\Omega)
+     & =K_z(\vect{k}_\perp,\omega=\Omega+\omega_0)
+    -\kappa(\omega=\Omega+\omega_0),               \\
+    \mathcal{Q}(\vect{k}_\perp,\Omega)
+     & =Q(\vect{k}_\perp,\omega=\Omega+\omega_0).
+  \end{aligned}
+\end{equation}
+其中，$\kappa(\omega=\Omega+\omega_0)=k_0+(\omega-\omega_0)/v_g$。
+
+\subsection{至此，主要的文本已经完成，还需要总结和非线性极化强度的具体形式。主要的参考文献\cite{couairon_practitioners_2011}}
+
+\bibliographystyle{unsrt}
+\bibliography{参考文献}
 
 \end{document}
