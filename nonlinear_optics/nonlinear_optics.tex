@@ -6,6 +6,8 @@
 \usepackage{amsmath}
 \usepackage{bm}
 \usepackage{indentfirst}
+\usepackage[backend=biber]{biblatex}
+\addbibresource{参考文献.bib}
 
 % Western text/numerals use Times New Roman and mathematics uses a
 % Times-compatible font. Chinese text and headings follow ctexart defaults.
@@ -373,7 +375,6 @@ Unidirectional Pulse Propagation Equation（UPPE）：
 
 \subsection{至此，主要的文本已经完成，还需要总结和非线性极化强度的具体形式。主要的参考文献\cite{couairon_practitioners_2011}}
 
-\bibliographystyle{unsrt}
-\bibliography{参考文献}
+\printbibliography[title={参考文献}]
 
 \end{document}
