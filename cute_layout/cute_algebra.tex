@@ -1,0 +1,58 @@
+\documentclass[a4paper,12pt]{ctexart}
+\usepackage[margin=2.54cm]{geometry}
+\usepackage{amsmath,newtxmath,newtxtext,bm}
+\usepackage{minted}
+\usepackage[svgnames]{xcolor}
+\setminted{
+  breaklines,
+  breakanywhere,
+  autogobble,
+  fontsize=\small
+}
+% \usepackage{indentfirst}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\linespread{1.25}
+\numberwithin{equation}{section}
+\pagestyle{plain}
+
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue]{hyperref}
+
+\usepackage[
+  backend=biber,
+  style=numeric,
+  sorting=none]{biblatex}
+\addbibresource{cute_algebra.bib}
+
+\begin{document}
+\section{CUTE layout代数}
+\subsection{一些基本的layout操作}
+A和B为CUTE layout，那么A与B的logical division为：$A \oslash B = A \circ (B,B^c)$，其中$B^c=\text{comp}(B,\text{size}(A))$。
+logical product定义为：$A \otimes B = (A,A^c \circ B)$，其中$A^c=\text{comp}(A,\text{size}(A)*\text{cosize}(B))$。
+更多的关于layout的基本操作可以查询参考文献\cite{carlisle2026categoricalfoundationscutelayouts}。
+\subsection{sgemm\_1.cu}
+在cute的第一个例子sgemm\_1.cu中，
+\begin{minted}[bgcolor=Beige,linenos]{cpp}
+  // Represent the full tensors
+  // (M,K)
+  Tensor mA = make_tensor(make_gmem_ptr(A), select<0, 2>(shape_MNK), dA);
+  // (N,K)
+  Tensor mB = make_tensor(make_gmem_ptr(B), select<1, 2>(shape_MNK), dB);
+  // (M,N)
+  Tensor mC = make_tensor(make_gmem_ptr(C), select<0, 1>(shape_MNK), dC);
+\end{minted}
+上述代码片段变量的layout分别为：
+\begin{equation}
+  \begin{aligned}
+    \text{mA} = (5120,4096):(1,5120) \\
+    \text{mB} = (5120,4096):(1,5120) \\
+    \text{mC} = (5120,5120):(1,5120) \\
+  \end{aligned}
+\end{equation}
+
+\printbibliography[title={参考文献}]
+\end{document}
