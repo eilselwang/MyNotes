@@ -152,10 +152,13 @@ tc分割得到的layout为：
 \end{equation}
 
 \subsection{sgemm_sm80.cu}
-示例sgemm_sm80.cu使用的mma atom为SM80_16x8x16_F16F16F16F16_TN，默认的矩阵shape为(5120, 5120, 4096)，A、B、C的layout分别为：
+示例sgemm_sm80.cu使用的mma atom为SM80_16x8x16_F16F16F16F16_TN，默认的矩阵shape为(5120, 5120, 4096)，CTA的shape为(128, 128, 64)，3级pipeline，
+A、B、C的layout分别为：
 \begin{equation}
   \begin{aligned}
-    
+    \mathrm{mA} & =(5120,4096):(4096,1)  \\
+    \mathrm{mA} & =(5120,4096):(4096,1)  \\
+    \mathrm{mC} & =(5120,5120):(1, 5120)
   \end{aligned}
 \end{equation}
 
