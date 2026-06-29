@@ -1,6 +1,9 @@
 \documentclass[a4paper,12pt]{ctexart}
 \usepackage[margin=2.54cm]{geometry}
-\usepackage{amsmath,newtxmath,newtxtext,bm}
+\usepackage{amsmath}
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+\usepackage{bm}
 \usepackage{minted}
 \usepackage[svgnames]{xcolor}
 \setminted{
@@ -9,7 +12,7 @@
   autogobble,
   fontsize=\small
 }
-% \usepackage{indentfirst}
+\usepackage{indentfirst}
 \setlength{\parindent}{2em}
 \setlength{\parskip}{0pt}
 \linespread{1.25}
@@ -24,33 +27,135 @@
 
 \usepackage[
   backend=biber,
-  style=numeric,
+  style=gb7714-2025,
   sorting=none]{biblatex}
 \addbibresource{cute_algebra.bib}
+
+\usepackage{underscore}
+
+\sloppy
 
 \begin{document}
 \section{CUTE layout代数}
 \subsection{一些基本的layout操作}
-A和B为CUTE layout，那么A与B的logical division为：$A \oslash B = A \circ (B,B^c)$，其中$B^c=\text{comp}(B,\text{size}(A))$。
-logical product定义为：$A \otimes B = (A,A^c \circ B)$，其中$A^c=\text{comp}(A,\text{size}(A)*\text{cosize}(B))$。
-更多的关于layout的基本操作可以查询参考文献\cite{carlisle2026categoricalfoundationscutelayouts}。
-\subsection{sgemm\_1.cu}
-在cute的第一个例子sgemm\_1.cu中，
-\begin{minted}[bgcolor=Beige,linenos]{cpp}
-  // Represent the full tensors
-  // (M,K)
-  Tensor mA = make_tensor(make_gmem_ptr(A), select<0, 2>(shape_MNK), dA);
-  // (N,K)
-  Tensor mB = make_tensor(make_gmem_ptr(B), select<1, 2>(shape_MNK), dB);
-  // (M,N)
-  Tensor mC = make_tensor(make_gmem_ptr(C), select<0, 1>(shape_MNK), dC);
-\end{minted}
-上述代码片段变量的layout分别为：
+A和B为CUTE layout，那么A与B的logical divide为：$A \oslash B = A \circ (B,B^c)$，其中$B^c=\mathrm{comp}(B,\mathrm{size}(A))$。
+logical product定义为：$A \otimes B = (A,A^c \circ B)$，其中$A^c=\mathrm{comp}(A,\mathrm{size}(A)*\mathrm{cosize}(B))$。
+关于layout基本操作的具体计算可以查询参考文献\cite{carlisle2026categoricalfoundationscutelayouts}。
+
+logical divide操作存在几种变体，分别是zipped divide、tiled divide和flat divide，与by mode logical divide的关系为：
 \begin{equation}
   \begin{aligned}
-    \text{mA} = (5120,4096):(1,5120) \\
-    \text{mB} = (5120,4096):(1,5120) \\
-    \text{mC} = (5120,5120):(1,5120) \\
+    \mathrm{Layout Shape}    & : (M, N, L, ...)                         \\
+    \mathrm{Tiler Shape}     & : <TileM, TileN>                         \\
+    \mathrm{logical\_divide} & : ((TileM,RestM), (TileN,RestN), L, ...) \\
+    \mathrm{zipped\_divide}  & : ((TileM,TileN), (RestM,RestN,L,...))   \\
+    \mathrm{tiled\_divide}   & : ((TileM,TileN), RestM, RestN, L, ...)  \\
+    \mathrm{flat\_divide}    & : (TileM, TileN, RestM, RestN, L, ...)
+  \end{aligned}
+\end{equation}
+
+logical product也存在类似的变体，分别是为：
+\begin{equation}
+  \begin{aligned}
+    \mathrm{Layout Shape}     & : (M, N, L, ...)                 \\
+    \mathrm{Tiler Shape}      & : <TileM, TileN>                 \\
+    \mathrm{logical\_product} & : ((M,TileM), (N,TileN), L, ...) \\
+    \mathrm{zipped\_product}  & : ((M,N), (TileM,TileN,L,...))   \\
+    \mathrm{tiled\_product}   & : ((M,N), TileM, TileN, L, ...)  \\
+    \mathrm{flat\_product}    & : (M, N, TileM, TileN, L, ...)
+  \end{aligned}
+\end{equation}
+同时还有rank敏感的blocked product和raked product，它们定义的代码片段为：
+\begin{minted}[bgcolor=Beige,linenos]{cpp}
+// blocked_product -- Reproduce a block over a tiler.
+// Think of every element of "tiler" as a "block"
+//   and return the layout of the resulting structure.
+// @post rank(@a result) == cute::max(rank(@a block), rank(@a tiler))
+template <class TShape, class TStride,
+          class UShape, class UStride>
+CUTE_HOST_DEVICE constexpr
+auto
+blocked_product(Layout<TShape,TStride> const& block,
+                Layout<UShape,UStride> const& tiler)
+{
+  constexpr int R = cute::max(rank_v<TShape>, rank_v<UShape>);
+  auto result = logical_product(append<R>(block), append<R>(tiler));
+  return zip(get<0>(result), get<1>(result));
+}
+
+// raked_product -- Reproduce a block over a tiler with block-interleaving.
+// Think of every element of "tiler" as a "block", interleave those blocks,
+//   and return the layout of the resulting structure.
+// @post rank(@a result) == cute::max(rank(@a block), rank(@a tiler))
+template <class TShape, class TStride,
+          class UShape, class UStride>
+CUTE_HOST_DEVICE constexpr
+auto
+raked_product(Layout<TShape,TStride> const& block,
+              Layout<UShape,UStride> const& tiler)
+{
+  constexpr int R = cute::max(rank_v<TShape>, rank_v<UShape>);
+  auto result = logical_product(append<R>(block), append<R>(tiler));
+  return zip(get<1>(result), get<0>(result));
+}
+\end{minted}
+两种product要求参与操作的layout或者tiler的rank相同，append函数将对应layout的rank用1:0补到R。zip交换mode，例如
+result的layout为((2, 3), (4, 5)):((1, 2), (6, 24))时，在raked product中返回的结果是((4, 2), (5, 3)):((6, 1), (24, 2))。
+
+\subsection{sgemm\_1.cu}
+在cute的第一个例子sgemm\_1.cu中，默认情况下gmem中tensor的layout分别为：
+\begin{equation}
+  \begin{aligned}
+    \mathrm{mA} = (5120,4096):(1,5120) \\
+    \mathrm{mB} = (5120,4096):(1,5120) \\
+    \mathrm{mC} = (5120,5120):(1,5120)
+  \end{aligned}
+\end{equation}
+使用local\_tile操作来分割gmem tensor，将数据分配到每一个线程块。local\_tile的具体操作是先zipped\_divide，然后将
+线程块的坐标应用于rest mode。分割后的tensor layout为：
+\begin{equation}
+  \begin{aligned}
+    \mathrm{gA} & = (128,8,512):(1,5120,40960) \\
+    \mathrm{gB} & = (128,8,512):(1,5120,40960) \\
+    \mathrm{gC} & = (128,128):(1,5120)
+  \end{aligned}
+\end{equation}
+分割后的A和B tensor有三个mode，前两个mode表示tile，第三个mode是在k方向迭代的次数。A和B每一个tile在线程块中smem的layout
+为(128, 8):(1, 128)，从gmem复制到smem使用的CTA layout为(32, 8):(1, 32)。CTA内分配到每个线程的数据为：
+\begin{minted}[bgcolor=Beige,linenos]{cpp}
+  Tensor tAgA = local_partition(gA, tA, threadIdx.x);  // (THR_M,THR_K,k)
+  Tensor tAsA = local_partition(sA, tA, threadIdx.x);  // (THR_M,THR_K)
+  Tensor tBgB = local_partition(gB, tB, threadIdx.x);  // (THR_N,THR_K,k)
+  Tensor tBsB = local_partition(sB, tB, threadIdx.x);  // (THR_N,THR_K)
+\end{minted}
+首先threadIdx.x根据CTA的shape得到flat坐标，比如threadIdx.x=33时，tA.get_flat_coord(threadIdx.x)=(1, 1)，而threadIdx.x=258时，
+结果为(2, 0)。get\_flat\_coord不会检查index是否有效。之后gA与tA进行zipped\_divide，flat坐标作用于tile mode。具体的细节参照CUTE
+源码。最终得到的layout为：
+\begin{equation}
+  \begin{aligned}
+    \mathrm{tAgA} & = (4,1,512):(32,0,40960) \\
+    \mathrm{tAsA} & = (4,1):(32,0)           \\
+    \mathrm{tBgB} & = (4,1,512):(32,0,40960) \\
+    \mathrm{tBsB} & = (4,1):(32,0)
+  \end{aligned}
+\end{equation}
+根据以上的partition，CTA的每一个线程得到对应的fragment，将gmem的数据复制到smem。
+
+最后利用tc = (16, 16)对矩阵乘法时的数据进行分割，每一个线程得到对应的fragment。也是使用local_partition，具体细节查看CUTE源码。
+tc分割得到的layout为：
+\begin{equation}
+  \begin{aligned}
+    \mathrm{tCsA} & =(8,8):(16,128)   \\
+    \mathrm{tCsB} & =(8,8):(16,128)   \\
+    \mathrm{tCgC} & =(8,8):(16,81920)
+  \end{aligned}
+\end{equation}
+
+\subsection{sgemm_sm80.cu}
+示例sgemm_sm80.cu使用的mma atom为SM80_16x8x16_F16F16F16F16_TN，默认的矩阵shape为(5120, 5120, 4096)，A、B、C的layout分别为：
+\begin{equation}
+  \begin{aligned}
+    
   \end{aligned}
 \end{equation}
 
